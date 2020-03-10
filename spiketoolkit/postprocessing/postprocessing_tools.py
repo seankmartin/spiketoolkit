@@ -784,11 +784,18 @@ def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensi
     if dtype is None:
         dtype = recording.get_traces(channel_ids=[recording.get_channel_ids()[0]], start_frame=0, end_frame=1).dtype
 
-    recording.write_to_binary_dat_format(output_folder / 'recording.dat', dtype=dtype)
+    if isinstance(recording, se.BinDatRecordingExtractor):
+        if recording._time_axis == 0:
+            datfile_path = str(recording._datfile)
+    else:
+        print("Writing out a new phy recording")
+        recording.write_to_binary_dat_format(
+            output_folder / 'recording.dat', dtype=dtype)
+        datfile_path = str(output_folder / 'recording.dat')
 
     # write params.py
     with (output_folder / 'params.py').open('w') as f:
-        f.write("dat_path =" + "r'" + str(output_folder / 'recording.dat') + "'" + '\n')
+        f.write("dat_path =" + "r'" + datfile_path + "'" + '\n')
         f.write('n_channels_dat = ' + str(recording.get_num_channels()) + '\n')
         f.write("dtype = '" + str(dtype) + "'\n")
         f.write('offset = 0\n')
